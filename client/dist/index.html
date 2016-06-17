@@ -1,0 +1,122 @@
+<!doctype html>
+<html ng-app="muralUniversitario">
+
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+	<meta charset="utf-8">
+	<meta lang="pt-br">
+	<meta name="viewport" content="width=device-width,initial-scale=1">
+
+	<title>Mural Universitário</title>
+
+	<link rel="stylesheet" type="text/css" href="assets/css/style.min.css">
+
+	<!-- para o sistema Open Graph -->
+	<meta property="og:image" content="">
+	<meta property="og:description" content="Descrição">
+
+	<!-- Chrome, Firefox OS and Opera -->
+	<meta name="theme-color" content="#f15a4f">
+	<!-- Windows Phone -->
+	<meta name="msapplication-navbutton-color" content="#f15a4f">
+	<!-- iOS Safari -->
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="#f15a4f">
+
+	<link rel="stylesheet" href="assets/bower/bootstrap/dist/css/bootstrap.min.css">
+
+	<link rel="stylesheet" media="all" href="assets/css/style.min.css">
+</head>
+
+<body>
+
+	<div class="container-fluid">
+		<h1 class="text-center">Mural de Professores Universitários</h1>
+
+		<p class="text-center">O que acha?</p>
+
+		<h3>Cadastre seu professor</h3>
+		<hr>
+
+		<div class="row">
+
+			<form name="Professor" novalidate valdr-type="Professor">
+				
+				<div class="form-group col-xs-4" valdr-form-group>
+					<label for="">Nome</label>
+					<input type="text" class="form-control" name="professor[nome]" ng-model="professor.nome" placeholder="Nome">
+				</div>
+
+				<div class="form-group col-xs-4" valdr-form-group>
+					<label for="">Universidade</label>
+					<input type="text" class="form-control" name="professor[universidade]" ng-model="professor.universidade" placeholder="Universidade">
+				</div>
+
+				<div class="form-group col-xs-4" valdr-form-group>
+					<label for="">Cursos</label>
+					<input type="text" class="form-control" name="professor[cursos]" ng-model="professor.cursos" placeholder="Cursos">
+				</div>
+
+				<div class="form-group col-xs-4" valdr-form-group>
+					<label for="">Disciplinas</label>
+					<input type="text" class="form-control" name="professor[disciplinas]" ng-model="professor.disciplinas" placeholder="Disciplinas">
+				</div>
+				
+				<div class="form-group text-center col-xs-4">
+					<label for="">&nbsp;</label>
+					<button type="submit" ng-disabled="Professor.$invalid" class="btn btn-block btn-success">Salvar professor</button>
+				</div>
+			
+			</form>
+
+		</div> <!-- .row -->
+		
+		<div class="row">
+
+			<div class="col-xs-12">
+
+				<h3>Professores que já estão cadastrados</h3>
+				<hr>
+
+				<table class="table">
+					<thead>
+						<tr>
+							<th>Nome</th>
+							<th>Universidade</th>
+							<th>Cursos</th>
+							<th>Disciplinas</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><a href="javascript:void(0);" class="label label-lg label-default">Luiz Henrique Almeida da Silva</a></td>
+							<td>UFRGS</td>
+							<td>
+								<ul>
+									<li>Análise de Sistemas</li>
+								</ul>
+							</td>
+							<td>
+								<ul>
+									<li>Programação III</li>
+								</ul>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+
+			</div> <!-- .col-xs-12 -->
+
+		</div> <!-- .row -->
+
+	</div> <!-- .container-fluid -->
+
+</body>
+<script src="assets/bower/angular/angular.min.js" charset="utf-8"></script>
+<script src="assets/bower/angular-route/angular-route.min.js" charset="utf-8"></script>
+<script src="assets/bower/valdr/valdr.min.js" charset="utf-8"></script>
+<script src="assets/bower/valdr/valdr-message.min.js" charset="utf-8"></script>
+<script src="assets/js/script.min.js" charset="utf-8"></script>
+
+</html>

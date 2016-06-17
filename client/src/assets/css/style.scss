@@ -1,0 +1,23 @@
+// styles.scss
+
+// Imports
+@import "variables";
+@import "fonts";
+@import url("bootstrap.min.css");
+
+.form-group {
+    position: relative;
+    margin-bottom: 40px;
+}
+.valdr-message {
+    position: absolute;
+    left: 15px;
+    font-size: 12px;
+    bottom: -22px;
+}
+.valdr-message {
+  display: none;
+}
+.valdr-message.ng-touched {
+  display: inline !important;
+}

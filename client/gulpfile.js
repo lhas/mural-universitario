@@ -1,204 +1,196 @@
-// Generated on 2016-06-17 using generator-angular 0.15.1
-'use strict';
+// Aqui nós carregamos o gulp e os plugins através da função `require` do nodejs
+var gulp = require('gulp'),
+    jsmin = require('gulp-jsmin'),
+    htmlmin = require('gulp-htmlmin'),
+    connect = require('gulp-connect'),
+    critical = require('critical'),
+    rename = require('gulp-rename'),
+    concat = require('gulp-concat'),
+    sass = require('gulp-sass'),
+    imagemin = require('gulp-imagemin'),
+    sourcemaps = require('gulp-sourcemaps'),
+    cache = require('gulp-cache'),
+    del = require('del'),
+    runSequence = require('run-sequence'),
+    gutil = require('gulp-util'),
+    plumber = require('gulp-plumber');
 
-var gulp = require('gulp');
-var $ = require('gulp-load-plugins')();
-var openURL = require('open');
-var lazypipe = require('lazypipe');
-var rimraf = require('rimraf');
-var wiredep = require('wiredep').stream;
-var runSequence = require('run-sequence');
-
-var yeoman = {
-  app: require('./bower.json').appPath || 'app',
-  dist: 'dist'
+// Error handler
+var onError = function(err) {
+    gutil.beep();
+    console.log(err);
 };
 
-var paths = {
-  scripts: [yeoman.app + '/scripts/**/*.js'],
-  styles: [yeoman.app + '/styles/**/*.scss'],
-  test: ['test/spec/**/*.js'],
-  testRequire: [
-    yeoman.app + '/bower_components/angular/angular.js',
-    yeoman.app + '/bower_components/angular-mocks/angular-mocks.js',
-    yeoman.app + '/bower_components/angular-resource/angular-resource.js',
-    yeoman.app + '/bower_components/angular-cookies/angular-cookies.js',
-    yeoman.app + '/bower_components/angular-sanitize/angular-sanitize.js',
-    yeoman.app + '/bower_components/angular-route/angular-route.js',
-    'test/mock/**/*.js',
-    'test/spec/**/*.js'
-  ],
-  karma: 'karma.conf.js',
-  views: {
-    main: yeoman.app + '/index.html',
-    files: [yeoman.app + '/views/**/*.html']
-  }
-};
 
-////////////////////////
-// Reusable pipelines //
-////////////////////////
+// Definimos FALSE se não houver programação depois
+var whitespace = false;
 
-var lintScripts = lazypipe()
-  .pipe($.jshint, '.jshintrc')
-  .pipe($.jshint.reporter, 'jshint-stylish');
+// Definimos o diretorio dos arquivos que serão verificados na pasta SRC
+var filesSrc = {
+    js: [
+        './src/assets/js/jquery.min.js',
+        './src/assets/vendor/*.js',
+        './src/assets/js/*!(function.js|jquery.min.js).js',
+        './src/assets/js/function.js'
+    ],
+    imgs: './src/assets/imgs/**/*',
+    scss: './src/assets/css/*.scss',
+    css: './src/assets/css/*.css',
+    fonts: './src/assets/css/fonts/*',
+    bower: './src/assets/bower/**/*',
+    html: './src/pages/*.html',
+    index: './src/index.html'
+}
 
-var styles = lazypipe()
-  .pipe($.sass, {
-    outputStyle: 'expanded',
-    precision: 10
-  })
-  .pipe($.autoprefixer, 'last 1 version')
-  .pipe(gulp.dest, '.tmp/styles');
+// Definimos o diretorio dos arquivos na pasta DIST
+var dist = {
+    js: './dist/assets/js/',
+    imgs: './dist/assets/imgs/',
+    tempCss: './src/assets/css/',
+    css: './dist/assets/css/',
+    fonts: './dist/assets/css/fonts/',
+    bower: './dist/assets/bower',
+    html: './dist/pages/',
+    index: './dist/',
+    mapJS: '/map/',
+    mapCSS: '/map/'
+}
 
-///////////
-// Tasks //
-///////////
+// Tasks que rodarão por default, edite para sua preferência
+var taskDefault = ['connect', 'watch'];
 
-gulp.task('styles', function () {
-  return gulp.src(paths.styles)
-    .pipe(styles());
+// LiveReload
+gulp.task('connect', function() {
+    connect.server({
+        port: 8888,
+        root: 'dist',
+        livereload: true
+    });
 });
 
-gulp.task('lint:scripts', function () {
-  return gulp.src(paths.scripts)
-    .pipe(lintScripts());
+
+// Carregamos os arquivos JS
+// E rodamos uma tarefa para concatenação
+// Renomeamos o arquivo que sera minificado e logo depois o minificamos com o `jsmin`
+// E pra terminar usamos o `gulp.dest` para colocar os arquivos concatenados e minificados na pasta dist/
+gulp.task('js', function() {
+    gulp.src(filesSrc.js) // Arquivos que serão carregados, veja variável 'filesSrc.js' no início
+        .pipe(plumber({
+            errorHandler: onError
+        }))
+        .pipe(sourcemaps.init())
+        .pipe(concat('script.js')) // Concatena os arquivos js => Task maior tempo de execução
+        .pipe(jsmin()) // Transforma para formato ilegível
+        .pipe(rename({
+            suffix: '.min'
+        })) // Arquivo único de saída
+        .pipe(sourcemaps.write(dist.mapJS)) // Cria os sourcemaps
+        .pipe(gulp.dest(dist.js)) // pasta de destino do arquivo(s)
+        .pipe(connect.reload()); // LiveReload
 });
 
-gulp.task('clean:tmp', function (cb) {
-  rimraf('./.tmp', cb);
+// Carregamos os arquivos html
+// Minificamos os HTML's
+// E pra terminar usamos o `gulp.dest` para colocar os arquivos e minificados na pasta dist/
+gulp.task('html', function() {
+    gulp.src(filesSrc.html) // Arquivos que serão carregados, veja variável 'filesSrc.html' no início
+        .pipe(plumber({
+            errorHandler: onError
+        }))
+        .pipe(htmlmin({
+            collapseWhitespace: whitespace
+        })) // Transforma para formato ilegível
+        .pipe(gulp.dest(dist.html)) // pasta de destino do arquivo(s)
+        .pipe(connect.reload()); // LiveReload
 });
 
-gulp.task('start:client', ['start:server', 'styles'], function () {
-  openURL('http://localhost:9000');
+// Movemos a index para a pasta dist
+// e a minificamos
+gulp.task('index', function() {
+    gulp.src(filesSrc.index) // Arquivos que serão carregados, veja variável 'filesSrc.index' no início
+        .pipe(plumber({
+            errorHandler: onError
+        }))
+        .pipe(htmlmin({
+            collapseWhitespace: whitespace
+        })) // Transforma para formato ilegível
+        .pipe(gulp.dest(dist.index)) // pasta de destino do arquivo(s)
+        .pipe(connect.reload()); // LiveReload
+
 });
 
-gulp.task('start:server', function() {
-  $.connect.server({
-    root: [yeoman.app, '.tmp'],
-    livereload: true,
-    // Change this to '0.0.0.0' to access the server from outside.
-    port: 9000
-  });
+// Apagamos a pasta dist
+gulp.task('clean:dist', function() {
+    return del.sync('dist');
+})
+
+// Se for preciso, apagamos o cache dos arquivos
+gulp.task('cache:clear', function(callback) {
+    return cache.clearAll(callback)
+})
+
+// Movemos as imagens para a pasta dist
+gulp.task('imgs', function() {
+    gulp.src(filesSrc.imgs) // Arquivos que serão carregados, veja variável 'filesSrc.imgs' no início
+        .pipe(plumber({
+            errorHandler: onError
+        }))
+        .pipe(cache(imagemin())) // Otimiza as imagens e coloca em cache as que já foram
+        .pipe(gulp.dest(dist.imgs)) // pasta de destino do arquivo(s)
 });
 
-gulp.task('start:server:test', function() {
-  $.connect.server({
-    root: ['test', yeoman.app, '.tmp'],
-    livereload: true,
-    port: 9001
-  });
+// Movemos as fontes para a pasta dist
+gulp.task('fonts', function() {
+    gulp.src(filesSrc.fonts) // Arquivos que serão carregados, veja variável 'filesSrc.fonts' no início
+        .pipe(plumber({
+            errorHandler: onError
+        }))
+        .pipe(gulp.dest(dist.fonts)) // pasta de destino do arquivo(s)
 });
 
-gulp.task('watch', function () {
-  $.watch(paths.styles)
-    .pipe($.plumber())
-    .pipe(styles())
-    .pipe($.connect.reload());
-
-  $.watch(paths.views.files)
-    .pipe($.plumber())
-    .pipe($.connect.reload());
-
-  $.watch(paths.scripts)
-    .pipe($.plumber())
-    .pipe(lintScripts())
-    .pipe($.connect.reload());
-
-  $.watch(paths.test)
-    .pipe($.plumber())
-    .pipe(lintScripts());
-
-  gulp.watch('bower.json', ['bower']);
+// Carregamos os arquivos SCSS
+// E compilamos o SASS
+// Criamos o sourcemap
+gulp.task('sass', function() {
+    return gulp.src(filesSrc.scss) // Arquivos que serão carregados, veja variável 'filesSrc.scss' no início
+        .pipe(plumber({
+            errorHandler: onError
+        }))
+        .pipe(sourcemaps.init())
+        .pipe(sass({
+            outputStyle: 'compressed'
+        })) // Converte Sass para CSS
+        .pipe(rename('style.min.css'))
+        .pipe(sourcemaps.write(dist.mapCSS)) // Cria os sourcemaps
+        .pipe(gulp.dest(dist.css)) // pasta de destino do arquivo(s)
+        .pipe(connect.reload()); // LiveReload
 });
 
-gulp.task('serve', function (cb) {
-  runSequence('clean:tmp',
-    ['lint:scripts'],
-    ['start:client'],
-    'watch', cb);
+gulp.task('bower', function() {
+    return gulp.src(filesSrc.bower)
+        .pipe(gulp.dest(dist.bower));
 });
 
-gulp.task('serve:prod', function() {
-  $.connect.server({
-    root: [yeoman.dist],
-    livereload: true,
-    port: 9000
-  });
+// Tarefa de monitoração caso algum arquivo seja modificado, deve ser executado e deixado aberto, comando "gulp watch".
+gulp.task('watch', function() {
+    gulp.watch(filesSrc.js, ['js']); // Olha por mudanças nos arquivos JS
+    gulp.watch(filesSrc.html, ['html']); // Olha por mudanças nos arquivos HTML
+    gulp.watch(filesSrc.scss, ['sass']); // Olha por mudanças nos arquivos SASS
+    gulp.watch(filesSrc.imgs, ['imgs']); // Olha por mudanças nos arquivos IMGS
+    gulp.watch(filesSrc.index, ['index']); // Olha por mudanças nos arquivos INDEX
 });
 
-gulp.task('test', ['start:server:test'], function () {
-  var testToFiles = paths.testRequire.concat(paths.scripts, paths.test);
-  return gulp.src(testToFiles)
-    .pipe($.karma({
-      configFile: paths.karma,
-      action: 'watch'
-    }));
+gulp.task('critical', ['index'], function(cb) {
+    return critical.generate({
+        inline: true,
+        base: './dist/',
+        src: 'index.html',
+        dest: './dist/index.html',
+        minify: true
+    });
 });
 
-// inject bower components
-gulp.task('bower', function () {
-  return gulp.src(paths.views.main)
-    .pipe(wiredep({
-      directory: yeoman.app + '/bower_components',
-      ignorePath: '..'
-    }))
-  .pipe(gulp.dest(yeoman.app + '/views'));
+// Tarefa padrão quando executado o comando GULP
+gulp.task('default', function(callback) {
+    runSequence('clean:dist', 'sass', 'bower', 'fonts', 'imgs', 'js', 'html', 'index', taskDefault, callback)
 });
-
-///////////
-// Build //
-///////////
-
-gulp.task('clean:dist', function (cb) {
-  rimraf('./dist', cb);
-});
-
-gulp.task('client:build', ['html', 'styles'], function () {
-  var jsFilter = $.filter('**/*.js');
-  var cssFilter = $.filter('**/*.css');
-
-  return gulp.src(paths.views.main)
-    .pipe($.useref({searchPath: [yeoman.app, '.tmp']}))
-    .pipe(jsFilter)
-    .pipe($.ngAnnotate())
-    .pipe($.uglify())
-    .pipe(jsFilter.restore())
-    .pipe(cssFilter)
-    .pipe($.minifyCss({cache: true}))
-    .pipe(cssFilter.restore())
-    .pipe($.rev())
-    .pipe($.revReplace())
-    .pipe(gulp.dest(yeoman.dist));
-});
-
-gulp.task('html', function () {
-  return gulp.src(yeoman.app + '/views/**/*')
-    .pipe(gulp.dest(yeoman.dist + '/views'));
-});
-
-gulp.task('images', function () {
-  return gulp.src(yeoman.app + '/images/**/*')
-    .pipe($.cache($.imagemin({
-        optimizationLevel: 5,
-        progressive: true,
-        interlaced: true
-    })))
-    .pipe(gulp.dest(yeoman.dist + '/images'));
-});
-
-gulp.task('copy:extras', function () {
-  return gulp.src(yeoman.app + '/*/.*', { dot: true })
-    .pipe(gulp.dest(yeoman.dist));
-});
-
-gulp.task('copy:fonts', function () {
-  return gulp.src(yeoman.app + '/fonts/**/*')
-    .pipe(gulp.dest(yeoman.dist + '/fonts'));
-});
-
-gulp.task('build', ['clean:dist'], function () {
-  runSequence(['images', 'copy:extras', 'copy:fonts', 'client:build']);
-});
-
-gulp.task('default', ['build']);
